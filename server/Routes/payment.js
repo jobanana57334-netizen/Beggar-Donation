@@ -128,15 +128,15 @@ router.post("/payment-result", (req, res) => {
 
     // 4. 嚴格把關：防偽印章是真的 (isValid) 且 確實付錢了 (RtnCode === "1")
     if (isValid && data.RtnCode === "1") {
-      res.redirect("http://localhost:5173/thanks");
+      res.redirect("https://beggar-donation.vercel.app/thanks");
     } else {
       // 只要印章是假的，或是沒付錢，通通踢去失敗頁面！
-      res.redirect("http://localhost:5173/payment-failed");
+      res.redirect("https://beggar-donation.vercel.app/payment-failed");
     }
   } catch (err) {
     // 萬一客運站的驗證機器當機，為了安全起見，一律當作失敗處理
     console.error("❌ 客運站驗證過程發生錯誤", err);
-    res.redirect("http://localhost:5173/payment-failed");
+    res.redirect("https://beggar-donation.vercel.app/payment-failed");
   }
 });
 
