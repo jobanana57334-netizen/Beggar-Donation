@@ -1,0 +1,36 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 忽略所有環境變數檔案 (保護你的金鑰)
+.env
+.env.local
+.env.*.local
+
+# 忽略 Vite 的編譯產物
+dist/
+
+# 忽略系統檔案
+.DS_Store
+Thumbs.db

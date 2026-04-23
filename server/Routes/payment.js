@@ -1,0 +1,143 @@
+import express from "express";
+import { createRequire } from "module"; // 1. 引入建立 require 的功能
+import "dotenv/config";
+
+const require = createRequire(import.meta.url); // 2. 建立一個傳統的 require
+const ecpay_aio_nodejs = require("ecpay_aio_nodejs"); // 3. 使用傳統方式載入套件
+
+const router = express.Router();
+
+router.post("/create-payment", (req, res) => {
+  const { ECPAY_MERCHANT_ID, ECPAY_HASH_KEY, ECPAY_HASH_IV } = process.env;
+
+  // SDK 執行完整的設定檔，包含 MercProfile、IgnorePayment 與 IsProjectContractor
+  const options = {
+    OperationMode: "Test",
+    MercProfile: {
+      MerchantID: String(ECPAY_MERCHANT_ID).trim(),
+      HashKey: String(ECPAY_HASH_KEY).trim(),
+      HashIV: String(ECPAY_HASH_IV).trim(),
+    },
+    IgnorePayment: [], // 陣列中若包含特定字串則隱藏該付款方式，可選項："Credit", "WebATM", "ATM", "CVS", "BARCODE", "AndroidPay"
+    IsProjectContractor: false, // 是否為特約合作專案
+  };
+
+  console.log("🚀 使用 createRequire 模式與 MercProfile 結構發動訂單！");
+
+  const { amount } = req.body;
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "金額無效!" });
+  }
+
+  const base_param = {
+    MerchantTradeNo: `BG${Date.now()}`,
+    MerchantTradeDate: new Date()
+      .toLocaleString("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      })
+      .replace(/\//g, "/"),
+    TotalAmount: amount.toString(),
+    TradeDesc: "愛心捐款給阿信",
+    ItemName: "支持阿信脫離乞丐生活",
+    ReturnURL:
+      "https://cassette-extrude-shimmy.ngrok-free.dev/api/payment/return",
+    ChoosePayment: "ALL",
+    // ✅ 修改後：先讓綠界 POST 回你的後端
+    OrderResultURL: "http://localhost:3000/api/payment/payment-result",
+  };
+
+  try {
+    // 使用傳統 require 載入的建構子，參數就不會再弄丟了
+    const create = new ecpay_aio_nodejs(options);
+    const html = create.payment_client.aio_check_out_all(base_param);
+    res.send(html);
+  } catch (err) {
+    console.error("❌ 依然報錯，詳細內容：", err);
+    res.status(500).json({ error: "金流初始化失敗", detail: err.message });
+  }
+});
+
+// ==========================================
+// 付款結果回傳 (ReturnURL) 也要套用相同的設定
+// ==========================================
+router.post("/return", (req, res) => {
+  const data = req.body;
+  const { ECPAY_MERCHANT_ID, ECPAY_HASH_KEY, ECPAY_HASH_IV } = process.env;
+
+  const options = {
+    OperationMode: "Test",
+    MercProfile: {
+      MerchantID: String(ECPAY_MERCHANT_ID).trim(),
+      HashKey: String(ECPAY_HASH_KEY).trim(),
+      HashIV: String(ECPAY_HASH_IV).trim(),
+    },
+    IgnorePayment: [],
+    IsProjectContractor: false,
+  };
+
+  try {
+    const create = new ecpay_aio_nodejs(options);
+    const isValid =
+      create.payment_client.helper.is_check_mac_value_correct(data);
+
+    if (isValid && data.RtnCode === "1") {
+      console.log(`✅ 驗證成功且付款成功！訂單：${data.MerchantTradeNo}`);
+      return res.send("1|OK");
+    } else {
+      console.log(`⚠️ 驗證失敗或付款失敗。`);
+      return res.send("0|Error");
+    }
+  } catch (err) {
+    console.error("❌ 驗證過程發生錯誤", err);
+    res.send("0|Error");
+  }
+});
+
+router.post("/payment-result", (req, res) => {
+  const data = req.body;
+  // 記得要把環境變數拉進來
+  const { ECPAY_MERCHANT_ID, ECPAY_HASH_KEY, ECPAY_HASH_IV } = process.env;
+
+  // 1. 準備好驗證機器的設定檔
+  const options = {
+    OperationMode: "Test",
+    MercProfile: {
+      MerchantID: String(ECPAY_MERCHANT_ID).trim(),
+      HashKey: String(ECPAY_HASH_KEY).trim(),
+      HashIV: String(ECPAY_HASH_IV).trim(),
+    },
+    IgnorePayment: [],
+    IsProjectContractor: false,
+  };
+
+  try {
+    // 2. 組裝客運站專屬的驗證機器
+    const create = new ecpay_aio_nodejs(options);
+
+    // 3. 掃描客人口袋裡的紙條，確認防偽印章是不是綠界老大親自蓋的
+    const isValid =
+      create.payment_client.helper.is_check_mac_value_correct(data);
+
+    console.log("➡️ 綠界畫面導回觸發，正在確認客人的車票真偽與付款狀態...");
+
+    // 4. 嚴格把關：防偽印章是真的 (isValid) 且 確實付錢了 (RtnCode === "1")
+    if (isValid && data.RtnCode === "1") {
+      res.redirect("http://localhost:5173/thanks");
+    } else {
+      // 只要印章是假的，或是沒付錢，通通踢去失敗頁面！
+      res.redirect("http://localhost:5173/payment-failed");
+    }
+  } catch (err) {
+    // 萬一客運站的驗證機器當機，為了安全起見，一律當作失敗處理
+    console.error("❌ 客運站驗證過程發生錯誤", err);
+    res.redirect("http://localhost:5173/payment-failed");
+  }
+});
+
+export default router;
