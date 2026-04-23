@@ -19,12 +19,6 @@ app.use(express.urlencoded({ extended: true }));
 // 會自動變成 "/api/payment/create-payment"
 app.use("/api/payment", paymentRoutes);
 
-// 付款成功後的重導向路由
-app.get("/api/payment/redirect-to-thanks", (req, res) => {
-  // 重導向回前端感謝頁面 (請確認你的前端 Port 是 5174 還是 5173)
-  res.redirect("http://localhost:5174/thanks");
-});
-
 const PORT = 3000;
 
 app.listen(PORT, () => {

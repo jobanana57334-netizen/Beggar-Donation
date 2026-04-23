@@ -45,11 +45,11 @@ router.post("/create-payment", (req, res) => {
     TotalAmount: amount.toString(),
     TradeDesc: "愛心捐款給阿信",
     ItemName: "支持阿信脫離乞丐生活",
-    ReturnURL:
-      "https://cassette-extrude-shimmy.ngrok-free.dev/api/payment/return",
+    ReturnURL: "https://beggar-donation.onrender.com/api/payment/return",
     ChoosePayment: "ALL",
     // ✅ 修改後：先讓綠界 POST 回你的後端
-    OrderResultURL: "http://localhost:3000/api/payment/payment-result",
+    OrderResultURL:
+      "https://beggar-donation.onrender.com/api/payment/payment-result",
   };
 
   try {

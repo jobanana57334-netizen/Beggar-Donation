@@ -48,7 +48,7 @@ const Donation = () => {
 
       // 3. 呼叫你的後端 API
       const response = await fetch(
-        "http://localhost:3000/api/payment/create-payment",
+        "https://beggar-donation.onrender.com/api/payment/create-payment",
         {
           method: "POST",
           headers: {
