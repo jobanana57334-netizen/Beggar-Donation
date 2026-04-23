@@ -29,19 +29,23 @@ router.post("/create-payment", (req, res) => {
     return res.status(400).json({ error: "金額無效!" });
   }
 
+  // 1. 先取得當下時間，並手動加 8 小時轉換為台灣時間 (UTC+8)
+  const now = new Date();
+  const twTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+
+  // 2. 暴力拆解並強制補零 (padStart 會確保個位數前面加 0)
+  const yyyy = twTime.getUTCFullYear();
+  const mm = String(twTime.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(twTime.getUTCDate()).padStart(2, "0");
+  const HH = String(twTime.getUTCHours()).padStart(2, "0");
+  const MM = String(twTime.getUTCMinutes()).padStart(2, "0");
+  const ss = String(twTime.getUTCSeconds()).padStart(2, "0");
+
+  const formattedDate = `${yyyy}/${mm}/${dd} ${HH}:${MM}:${ss}`;
+
   const base_param = {
     MerchantTradeNo: `BG${Date.now()}`,
-    MerchantTradeDate: new Date()
-      .toLocaleString("zh-TW", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      })
-      .replace(/\//g, "/"),
+    MerchantTradeDate: formattedDate,
     TotalAmount: amount.toString(),
     TradeDesc: "愛心捐款給阿信",
     ItemName: "支持阿信脫離乞丐生活",
