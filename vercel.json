@@ -1,6 +1,4 @@
 {
-  "//": "這個配置文件是用於Vercel部署前端應用程式的，特別是當使用React Router等前端路由庫時，為了解決路由問題而添加的重寫規則。",
-  "//beggar-donation": "此配置文件應該放在beggar-donation項目的根目錄下，與package.json同級。",
   "rewrites": [
     {
       "source": "/(.*)",
