@@ -123,16 +123,10 @@ router.post("/payment-result", (req, res) => {
   try {
     // 2. 組裝客運站專屬的驗證機器
     const create = new ecpay_aio_nodejs(options);
-    // 確認 helper 到底是不是完整的物件，並列出裡面所有可用的函式
-    console.log(
-      "Helper 包含的屬性與函式:",
-      Object.keys(create.payment_client.helper || {}),
-    );
-    // 3. 掃描客人口袋裡的紙條，確認防偽印章是不是綠界老大親自蓋的
-    const isValid =
-      create.payment_client.helper.is_check_mac_value_correct(data);
 
-    console.log(create.payment_client.helper);
+    // 3. 掃描客人口袋裡的紙條，確認防偽印章是不是綠界老大親自蓋的
+    const isValid = create.payment_client.verify_chkmac(data);
+    console.log("驗證結果：", isValid);
     console.log("➡️ 綠界畫面導回觸發，正在確認客人的車票真偽與付款狀態...");
 
     // 4. 嚴格把關：防偽印章是真的 (isValid) 且 確實付錢了 (RtnCode === "1")
