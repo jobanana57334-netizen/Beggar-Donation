@@ -87,14 +87,22 @@ router.post("/return", (req, res) => {
 
   try {
     const create = new ecpay_aio_nodejs(options);
-    const isValid =
-      create.payment_client.helper.is_check_mac_value_correct(data);
+    // ✅ 拔除舊的幽靈函式，改用與 payment-result 一樣的底層驗證邏輯
+    const returnData = { ...data };
+    const receivedMac = returnData.CheckMacValue;
+    delete returnData.CheckMacValue;
+    const calculatedMac =
+      create.payment_client.helper.gen_chk_mac_value(returnData);
+    const isValid = receivedMac === calculatedMac;
 
     if (isValid && data.RtnCode === "1") {
-      console.log(`✅ 驗證成功且付款成功！訂單：${data.MerchantTradeNo}`);
+      console.log(
+        `✅ [背景對帳] 驗證成功且付款成功！訂單：${data.MerchantTradeNo}`,
+      );
+      // ⚠️ 綠界規定，背景背景對帳成功一定要回傳 "1|OK"，否則它會以為你沒收到，一直重發
       return res.send("1|OK");
     } else {
-      console.log(`⚠️ 驗證失敗或付款失敗。`);
+      console.log(`⚠️ [背景對帳] 驗證失敗或付款失敗。`);
       return res.send("0|Error");
     }
   } catch (err) {
