@@ -123,20 +123,37 @@ router.post("/payment-result", (req, res) => {
   try {
     // 2. 組裝客運站專屬的驗證機器
     const create = new ecpay_aio_nodejs(options);
-    console.log(
-      create.payment_client,
-      create.payment_client.verify_chkmac(data),
-    );
+    // ==========================================
     // 3. 掃描客人口袋裡的紙條，確認防偽印章是不是綠界老大親自蓋的
-    const isValid = create.payment_client.verify_chkmac(data);
+    // ==========================================
+
+    // (a) 先複製一份綠界回傳的資料，避免改到原始物件
+    const returnData = { ...data };
+
+    // (b) 取出客人帶來的防偽印章 (綠界傳來的 CheckMacValue)
+    const receivedMac = returnData.CheckMacValue;
+
+    // (c) ⚠️ 重要：計算前必須把 CheckMacValue 屬性從物件中拿掉！
+    delete returnData.CheckMacValue;
+
+    // (d) 呼叫官方底層函式，用我們手上的 HashKey/IV 重新算一次印章
+    const calculatedMac =
+      create.payment_client.helper.gen_chk_mac_value(returnData);
+
+    // (e) 比對兩個印章是否一模一樣
+    const isValid = receivedMac === calculatedMac;
+
+    console.log("=== 綠界傳來的印章 ===", receivedMac);
+    console.log("=== 系統計算的印章 ===", calculatedMac);
     console.log("驗證結果：", isValid);
     console.log("➡️ 綠界畫面導回觸發，正在確認客人的車票真偽與付款狀態...");
+
+    // ==========================================
 
     // 4. 嚴格把關：防偽印章是真的 (isValid) 且 確實付錢了 (RtnCode === "1")
     if (isValid && data.RtnCode === "1") {
       res.redirect("https://beggar-donation.vercel.app/thanks");
     } else {
-      // 只要印章是假的，或是沒付錢，通通踢去失敗頁面！
       res.redirect("https://beggar-donation.vercel.app/payment-failed");
     }
   } catch (err) {
