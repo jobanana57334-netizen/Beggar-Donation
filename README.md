@@ -1,16 +1,3 @@
-# React + Vite
+## 部署筆記
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Vercel 路由設定：** 專案根目錄下的 `vercel.json` 是為了解決 React Router 等單頁應用程式 (SPA) 在重新整理或金流跳轉回來時發生 404 的問題。它的作用是將所有未知的路由請求，全部統一導向給 `index.html` 讓前端接手處理。注意：Vercel 設定檔極度嚴格，不可加入任何形式的註解。
