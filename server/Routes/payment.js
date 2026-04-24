@@ -96,9 +96,6 @@ router.post("/return", (req, res) => {
     const isValid = receivedMac === calculatedMac;
 
     if (isValid && data.RtnCode === "1") {
-      console.log(
-        `✅ [背景對帳] 驗證成功且付款成功！訂單：${data.MerchantTradeNo}`,
-      );
       // ⚠️ 綠界規定，背景背景對帳成功一定要回傳 "1|OK"，否則它會以為你沒收到，一直重發
       return res.send("1|OK");
     } else {
@@ -150,11 +147,6 @@ router.post("/payment-result", (req, res) => {
 
     // (e) 比對兩個印章是否一模一樣
     const isValid = receivedMac === calculatedMac;
-
-    console.log("=== 綠界傳來的印章 ===", receivedMac);
-    console.log("=== 系統計算的印章 ===", calculatedMac);
-    console.log("驗證結果：", isValid);
-    console.log("➡️ 綠界畫面導回觸發，正在確認客人的車票真偽與付款狀態...");
 
     // ==========================================
 
