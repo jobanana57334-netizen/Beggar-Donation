@@ -123,7 +123,10 @@ router.post("/payment-result", (req, res) => {
   try {
     // 2. 組裝客運站專屬的驗證機器
     const create = new ecpay_aio_nodejs(options);
-
+    console.log(
+      create.payment_client,
+      create.payment_client.verify_chkmac(data),
+    );
     // 3. 掃描客人口袋裡的紙條，確認防偽印章是不是綠界老大親自蓋的
     const isValid = create.payment_client.verify_chkmac(data);
     console.log("驗證結果：", isValid);
